@@ -1,58 +1,39 @@
 <img src="images/logo_small.jpg" height=110>
 
-# Dataframer by [Bitphy](https://bitphy.com)
+# Dataframer
 
 A small library for creating pandas DataFrame fixtures.
 
-========
+This library generates pandas dataframes with prescribed columns and types, and filled up rows. It can therefore be used to generate arbitrary data for fixtures to be used in unit tests.
 
-When testing with pandas dataframe, to generate easily fixture use this library
+# Usage
+ 
+Dataframer allows you, by passing a dictionary mapping column names to data typesand data, to generate a fixture dataframe.
 
-# The problem: how do we generate pandas DataFrame fixtures?
+### Supported data types:
 
-To manually define dataframe fixtures in python you have to do things such as:
+Data types are to be passed as strings:
 
-```python 
-import pandas as pd
-from pytest import fixture
+- `'timestamp'`: np.datetime64 with minute precision.
+- `'date'`: np.datetime64 with day precision.
+- `'int'`: np.int64.
+- `'float'`: np.float64.
+- `'str'`: strings.
+- `'constant_str'`: a column of a single repeated constant string.
+- `'constant_int'`: a column of a single repeated constant integer.
+- `'enum'`: a column of values ranging from 0 to a small integer.
 
-@fixture
-def df():
-    d = {
-        'a': [1, 2, 3],
-        'b': [5, 6, 7],
-    }
-    return pd.DataFrame(d)
-``` 
-
-Which generate a fixture dataframe that looks like:
-
-a | b
---|--
-1 | 5
-2 | 6
-3 | 7
-
-Nevertheless, this method is slow to write, naughty and does not 
-allow you to define many rows or cases in an acceptable time.
-
-
-# Solution
-
-Dataframer, allows you, by passing a dictionary of columns and its dtypes
-generate a fixture dataframe that fulfills what you want.
-
-Plus, as far as you use the same seed when you initialize the class the 
-fixture is consistent, namely, is always the same dataframe while the call
-inputs are the same.
+After fixing a numpy random seed, the generated fixture is constant and can be used for testing purposes.
 
 
 # Examples
 
+If no parameters are passed, a dataframe with a single column named `'id'` and containing integers is created.
+
 ```python
 from dataframer import DataFrameMaker
 
-maker = DataFrameMaker()
+maker = DataFrameMaker(seed=1)  # seed fixes the numpy random seed.
 df = maker.make_df(nrows=5)
 ```
 
@@ -67,23 +48,19 @@ index |id
 4     | 50057
 
 
-A more useful example follows:
+In order to use any of the supported types, pass them as a dictionary as follows.
 
 ```python
 from dataframer import DataFrameMaker
 
-maker = DataFrameMaker()
+columns = {
+    'a': 'str', 
+    'b': 'float', 
+    'c': 'int'
+}
 
-df = (
-    maker
-    .make_df(nrows=3, 
-             cols={
-                'a': 'str', 
-                'b': 'float', 
-                'c': 'int'
-             }
-        )
-    )
+maker = DataFrameMaker(seed=1)
+df = maker.make_df(nrows=3, cols=columns)
 ```
 
 a | b | c
