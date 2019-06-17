@@ -6,8 +6,6 @@ A small library for creating pandas DataFrame fixtures.
 
 ========
 
-<img src="images/logo_small.jpg" height=110>
-
 When testing with pandas dataframe, to generate easily fixture use this library
 
 # The problem: how do we generate pandas DataFrame fixtures?
@@ -41,7 +39,7 @@ allow you to define many rows or cases in an acceptable time.
 
 # Solution
 
-Dataframer allows you by passing a dictionary of columns and its dtypes
+Dataframer, allows you, by passing a dictionary of columns and its dtypes
 generate a fixture dataframe that fulfills what you want.
 
 Plus, as far as you use the same seed when you initialize the class the 
@@ -68,6 +66,8 @@ index |id
 3     | 98047
 4     | 50057
 
+
+A more useful example follows:
 
 ```python
 from dataframer import DataFrameMaker
