@@ -1,0 +1,10 @@
+pre-commit:
+  commands:
+    black:
+      tags: python
+      glob: "*.py"
+      run: black {staged_files}
+    pylint:
+      tags: python
+      glob: "*.py"
+      run: pylint -E {staged_files}

@@ -42,9 +42,7 @@ def column_grabber(dtype: str):
     elif dtype == "enum":
         return EnumColumnMaker
 
-    raise UnsupportedDataType(
-        f"Data type '{dtype}' currently not supported."
-    )
+    raise UnsupportedDataType(f"Data type '{dtype}' currently not supported.")
 
 
 class ColumnMakerBaseClass(ABC):
@@ -84,7 +82,7 @@ class IntColumnMaker(ColumnMakerBaseClass):
         """Compute column data and return it as a numpy array.
         """
         np.random.seed(self.seed)
-        return np.random.randint(0, 10**5, self.nrows, dtype=np.int64)
+        return np.random.randint(0, 10 ** 5, self.nrows, dtype=np.int64)
 
 
 class FloatColumnMaker(ColumnMakerBaseClass):
@@ -123,7 +121,7 @@ class TimestampColumnMaker(ColumnMakerBaseClass):
         """
         start_seed = np.datetime64("2017-01-01 00:00")
         np.random.seed(self.seed)
-        jumps = np.random.randint(1, 10**6, size=self.nrows)
+        jumps = np.random.randint(1, 10 ** 6, size=self.nrows)
 
         return np.array([start_seed + j for j in jumps])
 
@@ -145,9 +143,10 @@ class DateColumnMaker(ColumnMakerBaseClass):
         """
         start_seed = np.datetime64("2017-01-01")
         np.random.seed(self.seed)
-        jumps = np.random.randint(1, 10**4, size=self.nrows)
+        jumps = np.random.randint(1, 10 ** 4, size=self.nrows)
 
         return np.array([start_seed + j for j in jumps])
+
 
 class StringColumnMaker(ColumnMakerBaseClass):
     """Make a column of strings of fixed length.
@@ -167,9 +166,9 @@ class StringColumnMaker(ColumnMakerBaseClass):
         """Compute column data and return it as a numpy array.
         """
         np.random.seed(self.seed)
-        return np.array([''.join(np.random.choice(CHARS,
-                                                  self.str_len))
-                         for _ in range(self.nrows)])
+        return np.array(
+            ["".join(np.random.choice(CHARS, self.str_len)) for _ in range(self.nrows)]
+        )
 
 
 class ConstantStringColumnMaker(ColumnMakerBaseClass):
@@ -190,8 +189,7 @@ class ConstantStringColumnMaker(ColumnMakerBaseClass):
         """Compute column data and return it as a numpy array.
         """
         np.random.seed(self.seed)
-        return np.array(self.nrows*[''.join(np.random.choice(CHARS,
-                                                             self.str_len))])
+        return np.array(self.nrows * ["".join(np.random.choice(CHARS, self.str_len))])
 
 
 class ConstantIntColumnMaker(ColumnMakerBaseClass):
@@ -210,8 +208,7 @@ class ConstantIntColumnMaker(ColumnMakerBaseClass):
         """Compute column data and return it as a numpy array.
         """
         np.random.seed(self.seed)
-        return np.repeat(np.random.randint(0, 10**5, dtype=np.int64),
-                         self.nrows)
+        return np.repeat(np.random.randint(0, 10 ** 5, dtype=np.int64), self.nrows)
 
 
 class EnumColumnMaker(ColumnMakerBaseClass):

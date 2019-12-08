@@ -9,7 +9,12 @@ import pandas.util.testing as tm
 from dataframer import DataFrameMaker
 from dataframer.exceptions import UnsupportedDataType
 
-assert pd.__version__ == '0.23.4'
+
+def test_pandas_version():
+    """This test is designed to keep an eye on compatibility with the current pandas
+    version; its failure means we should update the test, provided nothing else fails.
+    """
+    assert pd.__version__ == "0.25.3"
 
 
 def check_df(df: pd.DataFrame, shape: Tuple[int, int], cols: Dict[str, str]):
@@ -18,7 +23,6 @@ def check_df(df: pd.DataFrame, shape: Tuple[int, int], cols: Dict[str, str]):
 
 
 class TestDataFrameMaker(object):
-
     def test__init(self):
 
         dm = DataFrameMaker()
@@ -30,32 +34,31 @@ class TestDataFrameMaker(object):
 
         dm = DataFrameMaker()
         with pytest.raises(UnsupportedDataType):
-            dm.make_df(nrows=100, cols={'id': 'foo'})
+            dm.make_df(nrows=100, cols={"id": "foo"})
 
         n = 100
-        t_cols = {'id': 'int'}
+        t_cols = {"id": "int"}
         df = dm.make_df(nrows=n, cols=t_cols)
         check_df(df, (100, 1), t_cols)
 
-        df_res = pd.read_pickle('tests/df1.pkl')
+        df_res = pd.read_pickle("tests/df1.pkl")
 
         tm.assert_frame_equal(df, df_res)
 
-
         n = 1000
         t_cols = {
-            'ts': 'timestamp',
-            'dt': 'date',
-            'ints': 'int',
-            'floats': 'float',
-            's': 'str',
-            'cs': 'constant_str',
-            'ci': 'constant_int',
-            'en': 'enum',
+            "ts": "timestamp",
+            "dt": "date",
+            "ints": "int",
+            "floats": "float",
+            "s": "str",
+            "cs": "constant_str",
+            "ci": "constant_int",
+            "en": "enum",
         }
         df = dm.make_df(nrows=n, cols=t_cols, str_len=12, enum_len=5)
         check_df(df, (n, len(t_cols)), t_cols)
 
-        df_res = pd.read_pickle('tests/df2.pkl')
+        df_res = pd.read_pickle("tests/df2.pkl")
 
         tm.assert_frame_equal(df, df_res)
