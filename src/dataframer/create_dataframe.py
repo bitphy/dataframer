@@ -14,8 +14,13 @@ class DataFrameMaker:
     def __init__(self, seed: int = 1):
         self.seed = seed
 
-    def make_df(self, nrows: int = 100, cols: Dict[str, str] = {'id': 'int'},
-                str_len: int = 14, enum_len: int = 4) -> pd.DataFrame:
+    def make_df(
+        self,
+        nrows: int = 100,
+        cols: Dict[str, str] = {"id": "int"},
+        str_len: int = 14,
+        enum_len: int = 4,
+    ) -> pd.DataFrame:
         """Build a DataFrame of the specified dimensions.
 
         :param nrows: number of rows in the DataFrame.
@@ -35,9 +40,9 @@ class DataFrameMaker:
 
         for col, dtype in cols.items():
             ColMaker = column_grabber(dtype)
-            if dtype in ['str', 'constant_str']:
+            if dtype in ["str", "constant_str"]:
                 cm = ColMaker(nrows, self.seed, str_len)
-            elif dtype == 'enum':
+            elif dtype == "enum":
                 cm = ColMaker(nrows, self.seed, enum_len)
             else:
                 cm = ColMaker(nrows, self.seed)
