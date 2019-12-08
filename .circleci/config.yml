@@ -1,25 +1,110 @@
-version: 2 # use CircleCI 2.0
-jobs: # A basic unit of work in a run
-  build: # runs not using Workflows must have a `build` job as entry point 
-    # directory where steps are run
+# This config creates a circleCI workflow for a python library, as stored by us.
+# 
+# In order to add continuous integration to your project, follow these steps:
+# 1) Copy this file into `.circleci/config.yml` in the root of your project.
+# 2) Replace the occurrences of 'LIBNAME' by a keyword identifying this library. This enables faster runs by using cache.
+# 3) Add the project build in the circleCI dashboard. https://circleci.com/dashboard
+# 4) Copy env variables from a different project, or define your own. At least, the following should be defined:
+#    NEXUSPASS, NEXUSUSER, S3_ACCESS_KEY, S3_SECRET_KEY
+# 
+# The current setup will only run whenever a tag is created. Two steps are run in the workflow:
+# 1) *Test*: the test suite runs, by using pipenv and pytest.
+# 2) *Release Lib*: If the test suite runs successfully (meaning there are tests and they do pass), the library sdist is built and posted to artifacts.
+
+version: 2
+jobs:
+  Test:
     working_directory: ~/app
-    docker: # run the steps with Docker
+    docker:
       # CircleCI Python images available at: https://hub.docker.com/r/circleci/python/
-      - image: circleci/python:3.6.4
-    steps: # steps that comprise the `build` job
-      - checkout # check out source code to working directory
+      # We do use the provided images which are great for CI.
+      - image: circleci/python:3.7
+        environment:
+          PIPENV_VENV_IN_PROJECT: true
+    steps:
+      - checkout  # Code is checked out from bitbucket into the folder
+
+      # These two ensure that we can write into the env and use cache.
       - run: sudo chown -R circleci:circleci /usr/local/bin
-      - run: sudo chown -R circleci:circleci /usr/local/lib/python3.6/site-packages
+      - run: sudo chown -R circleci:circleci /usr/local/lib/python3.7/site-packages 
+
+      # Cache looks for the venv of a previous build. If the Pipfile.lock did not change, the `pipenv install` will be much faster.
+      # Use a file name of the form vX-LIB-Y, where:
+      # - X is the cache version (this can be changed to invalidate cache).
+      # - LIB is a name referring to the library (change it here).
+      # - Y is the checksum of Pipfile.lock; this really controls the need for a fresh install.
+      - restore_cache:
+          key: v1-dataframer-{{ checksum "Pipfile.lock" }}
+
+      # Install the venv using pipenv.
       - run:
+          name: pipenv
           command: |
-            sudo pip install pytest pytest-cov
-            sudo pip install -r requirements.txt
-            sudo pip install -e .
+            sudo pip install pipenv
+            pipenv install --dev
+
+      # Save the venv as a cache file to save time next time.
+      - save_cache:
+          key: v1-dataframer-{{ checksum "Pipfile.lock" }} # Must agree with jobs.steps.restore_cache.key
+          paths:
+            - ".venv"
+            - "/usr/local/bin"
+            - "/usr/local/lib/python3.7/site-packages"
+
+      # Run the test suite using pytest, save test results as a junit XML report.
       - run:
+          name: tests
           command: |
-            pytest
-      - store_test_results: # Upload test results for display in Test Summary: https://circleci.com/docs/2.0/collect-test-data/
+            mkdir test-results
+            pipenv run pytest --junitxml=test-results/junit.xml
+      
+      - store_test_results: # Upload test results for display in Test Summary.
           path: test-results
-      - store_artifacts: # Upload test summary for display in Artifacts: https://circleci.com/docs/2.0/artifacts/
+      - store_artifacts: # Upload test summary for display in Artifacts.
           path: test-results
           destination: tr1
+
+  Release Lib:
+    # The goal of this workflow step is to build the library's sdist and to post it to Nexus Artifacts.
+    # We use twine (recommended by PyPI)
+    working_directory: ~/app
+    docker:
+      - image: circleci/python:3.7  # Should match the version used in the previous step.
+        environment:
+          PIPENV_VENV_IN_PROJECT: true
+    steps:
+      - checkout
+      - run: sudo chown -R circleci:circleci /usr/local/bin
+      - run: sudo chown -R circleci:circleci /usr/local/lib/python3.7/site-packages 
+      - run:
+          name: Build & Push PyPI Package
+          command: |
+            pip install twine
+            VERSION=`git describe`
+            TAG=$VERSION
+            echo ${TAG}
+            REPO=https://artifacts.bitphy.es/repository/pypi-private-snapshot/
+            python setup.py build sdist
+            twine upload --repository-url $REPO -u $NEXUSUSER -p $NEXUSPASS dist/*
+
+# This governs the existing workflow steps and their internal dependency.
+# Namely, on a tag creation the Test job will run and, if successful, the Release Lib job will run
+workflows:
+  version: 2
+  workflow:
+    jobs:
+      - Test:
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
+
+      - Release Lib:
+          requires:
+            - Test
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
