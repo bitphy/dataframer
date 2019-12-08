@@ -14,7 +14,7 @@ def test_pandas_version():
     """This test is designed to keep an eye on compatibility with the current pandas
     version; its failure means we should update the test, provided nothing else fails.
     """
-    assert pd.__version__ == "0.23.4"
+    assert pd.__version__ == "0.25.3"
 
 
 def check_df(df: pd.DataFrame, shape: Tuple[int, int], cols: Dict[str, str]):
